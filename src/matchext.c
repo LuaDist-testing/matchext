@@ -240,11 +240,12 @@ static int singlematch (MatchState *ms, const char *s, const char *p,
 
 static const char *matchbalance (MatchState *ms, const char *s,
                                    const char *p) {
-  if (p >= ms->p_end - 1)
-    luaL_error(ms->L, "malformed pattern (missing arguments to '%%b')");
+  int escaped = (*(p-1) == 'B');  /* EXT */
+  if (p >= ms->p_end - 1 - escaped)
+    luaL_error(ms->L, "malformed pattern (missing arguments to '%c%c')",
+               L_ESC, *(p-1));
   if (*s != *p) return NULL;
   else {
-    int escaped = (*(p-1) == 'B') ? 1 : 0;  /* EXT */
     int b = *p;
     int e = *(p + (escaped ? 2 : 1));  /* EXT */
     int esc = escaped ? *(p + 1) : INT_MAX;  /* EXT */
@@ -596,8 +597,6 @@ static int str_find_aux (lua_State *L, int mode) {  /* EXT */
         else if (mode == MODE_MATCH)  /* EXT */
           return push_captures(&ms, s1, res);
         else {  /* EXT */
-          lua_pushvalue(L, 1);
-          lua_pushvalue(L, 2);
           return build_result_table(&ms, s1, res);
         }
       }
@@ -628,13 +627,13 @@ static int table_match(lua_State *L) {
 typedef struct GMatchState {
   const char *src;  /* current position */
   const char *p;  /* pattern */
+  int table;  /* EXT - whether to produce tables */
   MatchState ms;  /* match state */
 } GMatchState;
 
 
 static int gmatch_aux (lua_State *L) {
   GMatchState *gm = (GMatchState *)lua_touserdata(L, lua_upvalueindex(3));
-  int table = (int)lua_tointeger(L, lua_upvalueindex(4));  /* EXT */
   const char *src;
   for (src = gm->src; src <= gm->ms.src_end; src++) {
     const char *e;
@@ -644,7 +643,7 @@ static int gmatch_aux (lua_State *L) {
         gm->src =src + 1;  /* go at least one position */
       else
         gm->src = e;
-      if (table)  /* EXT */
+      if (gm->table)  /* EXT */
         return build_result_table(&gm->ms, src, e);
       else
         return push_captures(&gm->ms, src, e);
@@ -664,8 +663,8 @@ static int gmatch_setup(lua_State *L, int table) {
   gm = (GMatchState *)lua_newuserdata(L, sizeof(GMatchState));
   prepstate(&gm->ms, L, s, ls, p, lp);
   gm->src = s; gm->p = p;
-  lua_pushinteger(L, table);  /* EXT */
-  lua_pushcclosure(L, gmatch_aux, 4);  /* EXT */
+  gm->table = table;  /* EXT */
+  lua_pushcclosure(L, gmatch_aux, 3);  /* EXT */
   return 1;
 }
 
@@ -841,6 +840,23 @@ static int matchobj_expand(lua_State *L) {
 }
 
 
+static int escape(lua_State *L) {
+  size_t sl;
+  const char *s = luaL_checklstring(L, 1, &sl);
+  const char *end = s + sl;
+  luaL_Buffer b;
+  luaL_buffinit(L, &b);
+  while (s < end) {
+    if (uchar(*s) < 128 && !isalnum(*s) && !iscntrl(*s))
+      luaL_addchar(&b, L_ESC);
+    luaL_addchar(&b, *s);
+    s++;
+  }
+  luaL_pushresult(&b);
+  return 1;
+}
+
+
 static const luaL_Reg matchext_lib[] = {
   {"find", str_find},
   {"match", str_match},
@@ -849,6 +865,7 @@ static const luaL_Reg matchext_lib[] = {
   {"tmatch", table_match},
   {"tgmatch", table_gmatch},
   {"tgsub", table_gsub},
+  {"escape", escape},
   {NULL, NULL}  /* monkeypatch is not listed here */
 };
 

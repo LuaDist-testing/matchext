@@ -1,17 +1,17 @@
 -- This file was automatically generated for the LuaDist project.
 
 package = 'matchext'
-version = '0.2.1-1'
+version = '0.3.0-1'
 
 -- LuaDist source
 source = {
-  tag = "0.2.1-1",
+  tag = "0.3.0-1",
   url = "git://github.com/LuaDist-testing/matchext.git"
 }
 -- Original source
 -- source = {}
 source.url = 'git://github.com/jcgoble3/lua-matchext.git'
-source.tag = 'v0.2.1-1'
+source.tag = 'v0.3.0-1'
 
 description = {}
 description.summary = 'Fork of Lua 5.3 pattern matching with added features'
