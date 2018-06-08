@@ -1,17 +1,17 @@
 -- This file was automatically generated for the LuaDist project.
 
 package = 'matchext'
-version = '0.1.0-2'
+version = '0.1.1-1'
 
 -- LuaDist source
 source = {
-  tag = "0.1.0-2",
+  tag = "0.1.1-1",
   url = "git://github.com/LuaDist-testing/matchext.git"
 }
 -- Original source
 -- source = {}
 source.url = 'git://github.com/jcgoble3/lua-matchext.git'
-source.tag = 'v0.1.0-2'
+source.tag = 'v0.1.1-1'
 
 description = {}
 description.summary = 'Fork of Lua 5.3 pattern matching with added features'
@@ -34,7 +34,9 @@ Possible features in the future are listed below. The priority is given on a sca
 * `|` for alternation, as in ordinary regex (priority 1)
 * Non-capturing parentheses (priority 8, but pointless unless and until support for group quantifiers or alternation is implemented)
 * Support for null characters in patterns for Lua 5.1 (priority 3)
-* ?????]]
+* Split function (priority 5)
+* ?????
+]]
 
 dependencies = {'lua >= 5.1, < 5.4'}
 
